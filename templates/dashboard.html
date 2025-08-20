@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Backup - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+        }
+
+        .status-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .start-button {
+            background: #ffffff;
+            color: #4285f4;
+            border: none;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .start-button:disabled {
+            background: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-header h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+
+        .progress-bar-container {
+            background: #ecf0f1;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            min-width: 0;
+        }
+
+        .progress-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4285f4;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #5a6c7d;
+            min-width: 80px;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        }
+
+        .current-file {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .current-file strong {
+            color: #856404;
+        }
+
+        .download-section {
+            margin-top: 30px;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .download-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .download-card:hover {
+            border-color: #4285f4;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.1);
+        }
+
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .download-link:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6c757d;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #4285f4;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">
+            ← Back to Home
+        </a>
+        
+        <div class="header">
+            <h1>🚀 Ready to Backup</h1>
+            <p>Your Google Drive is connected. Start downloading all your files as organized ZIP archives.</p>
+        </div>
+        
+        <div class="status-card">
+            <span class="status-icon">✅</span>
+            <h2>Google Drive Connected Successfully</h2>
+            <p style="margin: 15px 0;">You're authenticated and ready to download your files</p>
+            <button class="start-button" onclick="startBackup()" id="startButton">
+                <span>🚀</span>
+                Start Complete Backup
+            </button>
+        </div>
+        
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <h3>📊 Backup Progress</h3>
+                <span id="progressPercentage">0%</span>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+            </div>
+            
+            <div class="progress-info">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" id="status">Starting...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Files:</span>
+                        <span class="info-value" id="fileCount">0 / 0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ZIP Files:</span>
+                        <span class="info-value" id="zipCount">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="current-file" id="currentFile" style="display: none;">
+                <strong>Currently processing:</strong> <span id="currentFileName">-</span>
+            </div>
+            
+            <div class="download-section" id="downloadSection" style="display: none;">
+                <h3>📥 Download Your Backup Files</h3>
+                <div class="download-grid" id="downloadGrid"></div>
+            </div>
+            
+            <div class="success-message" id="successMessage" style="display: none;">
+                <h3>🎉 Backup Complete!</h3>
+                <p>All your Google Drive files have been successfully downloaded and organized into ZIP archives.</p>
+            </div>
+            
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let polling = false;
+        let pollInterval;
+
+        async function startBackup() {
+            const startButton = document.getElementById('startButton');
+            const progressSection = document.getElementById('progressSection');
+            
+            try {
+                startButton.disabled = true;
+                startButton.innerHTML = '<span class="animate-pulse">🔄</span> Starting Backup...';
+                
+                const response = await fetch('/download/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to start backup');
+                }
+                
+                const data = await response.json();
+                console.log('Backup started with job ID:', data.job_id);
+                
+                progressSection.style.display = 'block';
+                polling = true;
+                pollProgress();
+                
+            } catch (error) {
+                console.error('Backup start error:', error);
+                showError('Failed to start backup: ' + error.message);
+                
+                startButton.disabled = false;
+                startButton.innerHTML = '<span>🚀</span> Start Complete Backup';
+            }
+        }
+
+        async function pollProgress() {
+            if (!polling) return;
+            
+            try {
+                const response = await fetch('/download/progress');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch progress');
+                }
+                
+                const progress = await response.json();
+                updateUI(progress);
+                
+                if (progress.status === 'completed') {
+                    polling = false;
+                    showSuccess();
+                } else if (progress.status === 'error') {
+                    polling = false;
+                    showError(progress.error || 'Unknown error occurred');
+                } else {
+                    setTimeout(pollProgress, 1000);
+                }
+                
+            } catch (error) {
+                console.error('Progress polling error:', error);
+                setTimeout(pollProgress, 2000);
+            }
+        }
+
+        function updateUI(progress) {
+            const percentage = progress.total_files > 0 ? 
+                Math.round((progress.processed_files / progress.total_files) * 100) : 0;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+            progressPercentage.textContent = percentage + '%';
+            
+            // Update status info
+            document.getElementById('status').textContent = 
+                progress.status.replace(/_/g, ' ').toUpperCase();
+            document.getElementById('fileCount').textContent = 
+                `${progress.processed_files} / ${progress.total_files}`;
+            document.getElementById('zipCount').textContent = 
+                progress.zip_files ? progress.zip_files.length : 0;
+            
+            // Update current file
+            const currentFileDiv = document.getElementById('currentFile');
+            const currentFileName = document.getElementById('currentFileName');
+            if (progress.current_file && progress.status === 'downloading') {
+                currentFileName.textContent = progress.current_file;
+                currentFileDiv.style.display = 'block';
+            } else {
+                currentFileDiv.style.display = 'none';
+            }
+            
+            // Update download links
+            if (progress.zip_files && progress.zip_files.length > 0) {
+                updateDownloadLinks(progress.zip_files);
+            }
+        }
+
+        function updateDownloadLinks(zipFiles) {
+            const downloadSection = document.getElementById('downloadSection');
+            const downloadGrid = document.getElementById('downloadGrid');
+            
+            downloadSection.style.display = 'block';
+            downloadGrid.innerHTML = '';
+            
+            zipFiles.forEach((filename, index) => {
+                const card = document.createElement('div');
+                card.className = 'download-card';
+                card.innerHTML = `
+                    <h4>📁 Archive ${index + 1}</h4>
+                    <p style="margin: 10px 0; color: #6c757d; font-size: 0.9em;">${filename}</p>
+                    <a href="/download/${filename}" class="download-link" download>
+                        📥 Download ZIP
+                    </a>
+                `;
+                downloadGrid.appendChild(card);
+            });
+        }
+
+        function showSuccess() {
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('startButton').innerHTML = '✅ Backup Complete';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = `❌ Error: ${message}`;
+            errorDiv.style.display = 'block';
+            
+            const startButton = document.getElementById('startButton');
+            startButton.disabled = false;
+            startButton.innerHTML = '<span>🔄</span> Retry Backup';
+        }
+
+        // Check for any existing progress on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/download/progress');
+                if (response.ok) {
+                    const progress = await response.json();
+                    if (progress.status !== 'idle') {
+                        document.getElementById('progressSection').style.display = 'block';
+                        updateUI(progress);
+                        
+                        if (progress.status !== 'completed' && progress.status !== 'error') {
+                            polling = true;
+                            pollProgress();
+                        } else if (progress.status === 'completed') {
+                            showSuccess();
+                        } else if (progress.status === 'error') {
+                            showError(progress.error || 'Unknown error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('No existing progress found');
+            }
+        });
+    </script>
+</body>
+</html>
